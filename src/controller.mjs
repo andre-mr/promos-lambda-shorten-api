@@ -108,13 +108,12 @@ export const createShortLink = async (event = {}) => {
   }
 
   const allowedDomains = getAllowedDomains();
-  const domain = requestedDomain || allowedDomains[0] || "";
 
-  if (!domain) {
+  if (!requestedDomain) {
     throw new HttpError(400, "Missing domain in request.");
   }
 
-  if (allowedDomains.length && !allowedDomains.includes(domain)) {
+  if (allowedDomains.length && !allowedDomains.includes(requestedDomain)) {
     throw new HttpError(400, "Domain not allowed.");
   }
 
@@ -128,14 +127,14 @@ export const createShortLink = async (event = {}) => {
   const ttl = Number.isFinite(ttlFromEnv) && ttlFromEnv > 0 ? ttlFromEnv : 31536000;
 
   const id = requestedTestId || generateRandomId(6);
-  const primaryKey = `${domain}#${id}`;
+  const primaryKey = `${requestedDomain}#${id}`;
   const createdDate = new Date().toISOString();
 
   const item = {
     PK: primaryKey,
     Clicks: 0,
     Created: createdDate,
-    Domain: domain,
+    Domain: requestedDomain,
     TTL: ttl,
     Url: incomingUrl,
   };
@@ -155,7 +154,7 @@ export const createShortLink = async (event = {}) => {
     throw new HttpError(500, "Could not persist shortlink.");
   }
 
-  const generatedShortUrl = `https://${domain}/${id}`;
+  const generatedShortUrl = `https://${requestedDomain}/${id}`;
   console.log("shortUrl, originalUrl, dateTime:", generatedShortUrl, incomingUrl, createdDate);
   return {
     shortUrl: generatedShortUrl,
